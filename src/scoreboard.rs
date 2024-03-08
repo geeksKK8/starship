@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 
-use crate::schedule::InGameSet;
+use crate::{schedule::InGameSet, state::GameState};
 
 const SCOREBOARD_FONT_SIZE: f32 = 40.0;
 const TEXT_COLOR: Color = Color::rgb(0.5, 0.5, 1.0);
@@ -21,13 +21,18 @@ impl Plugin for ScoreboardPlugin {
     fn build(&self, app: &mut bevy::prelude::App) {
         app.insert_resource(Scoreboard { score: 0 })
             .add_systems(Startup, spawn_scoreboard)
-            .add_systems(Update, update_scoreboard.after(InGameSet::EntityUpdates));
+            .add_systems(Update, update_scoreboard.after(InGameSet::EntityUpdates))
+            .add_systems(OnEnter(GameState::GameOver), reset_scoreboard);
     }
 }
 
 fn update_scoreboard(scoreboard: Res<Scoreboard>, mut query: Query<&mut Text, With<ScoreboardUi>>) {
     let mut text = query.single_mut();
     text.sections[1].value = scoreboard.score.to_string();
+}
+
+fn reset_scoreboard(mut scoreboard: ResMut<Scoreboard>) {
+    scoreboard.score = 0;
 }
 
 fn spawn_scoreboard(mut commands: Commands) {
